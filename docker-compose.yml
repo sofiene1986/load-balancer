@@ -1,0 +1,53 @@
+load_balancer:
+  build: haproxy
+  ports:
+    - "80:80"   
+  volumes:
+    - .\docker\haproxy:/usr/local/etc/haproxy:ro
+  links:
+    - node1:node1
+    - node2:node2
+node1:
+  image: nginx
+  volumes:
+    - .\nginx:/etc/nginx/conf.d
+    - .\public_html:/var/www/html
+  links:
+    - php:php
+    - db:db
+  ports:
+    - "82:80"
+node2:
+  image: nginx  
+  volumes:
+    - .\nginx:/etc/nginx/conf.d
+    - .\public_html:/var/www/html
+  links:
+    - php:php
+    - db:db
+  ports:
+    - "83:80"  
+db:
+  image: mysql:5.7.23
+#  volumes:
+#    - .\mysql:/var/lib/mysql
+  environment:
+    - MYSQL_ROOT_PASSWORD=root
+    - MYSQL_ROOT_USER=root
+php:
+  build: php
+  volumes:
+    - .\public_html:/var/www/html
+  links:
+    - db:db    
+phpmyadmin:
+  image: phpmyadmin/phpmyadmin
+  ports:
+    - "8080:80"
+  links:
+    - db:db
+  environment:
+    - PMA_HOST=db
+    - PMA_PORT=3306
+    - PMA_USER=root
+    - PMA_PASSWORD=root    
